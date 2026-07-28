@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Wiskunde Itembank — Klas 4-6</title>
+<!--
+  WISKUNDE ITEMBANK v2.0 — GitHub Pages versie
+  Deployment:
+  1. Maak repo aan op github.com (bijv. 'wiskunde-itembank')
+  2. Upload dit bestand als 'index.html' naar de root
+  3. Settings > Pages > Source: main / root
+  4. URL: https://[jouw-naam].github.io/wiskunde-itembank/
+  API-sleutel (voor AI-mutatie eigen vragen):
+  - Haal op via https://console.anthropic.com
+  - Sla in via het ⚙️-icoon in de app
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --bg1:#ffffff;--bg2:#f7f8fa;--tx1:#111;--tx2:#555;
+  --bd1:#c8c8c8;--bd2:#ddd;--bd3:#eeeeee;
+  --acc:#2E6DBD;--acc-l:#E6F1FB;--acc-ll:#B5D4F4;
+  --grn:#146C43;--grn-l:#E3F2EC;
+  --red:#A32D2D;--red-l:#FCEBEB;
+  --ora:#854F0B;--ora-l:#FAEEDA;
+  --rad:8px;--rad-s:5px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg1:#1c1c1e;--bg2:#2c2c2e;--tx1:#f0f0f0;--tx2:#aaa;--bd1:#444;--bd2:#444;--bd3:#333}
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg2);min-height:100vh}
+.app{max-width:900px;margin:20px auto;border-radius:var(--rad);overflow:hidden;box-shadow:0 2px 20px rgba(0,0,0,.1)}
+/* HEADER */
+.header{background:var(--acc);color:#fff;padding:1.2rem 1.5rem;display:flex;align-items:flex-start;justify-content:space-between}
+.header-text h1{font-size:20px;font-weight:500;margin-bottom:3px}
+.header-text p{font-size:12px;opacity:.85}
+.settings-btn{background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.settings-btn:hover{background:rgba(255,255,255,.35)}
+/* API BANNER */
+.api-banner{background:#FFF8E7;border-bottom:1px solid #FAC775;padding:9px 1.5rem;font-size:12px;color:#633806;display:flex;align-items:center;gap:10px}
+.api-banner a{color:var(--acc);cursor:pointer;font-weight:500}
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--bd3);background:var(--bg2);overflow-x:auto}
+.tab{padding:10px 16px;font-size:13px;cursor:pointer;border:none;border-bottom:2px solid transparent;color:var(--tx2);background:none;white-space:nowrap}
+.tab.active{color:var(--acc);border-bottom-color:var(--acc);font-weight:500}
+.cbadge{background:var(--bd2);color:var(--tx2);font-size:11px;padding:1px 6px;border-radius:20px;margin-left:4px}
+.tab.active .cbadge{background:var(--acc);color:#fff}
+.panel{display:none;background:var(--bg2)}.panel.active{display:block}
+/* CONTROLS */
+.controls{display:flex;gap:7px;padding:.8rem 1rem;background:var(--bg2);border-bottom:1px solid var(--bd3);flex-wrap:wrap;align-items:center}
+.controls input,.controls select{padding:6px 9px;border:1px solid var(--bd2);border-radius:var(--rad-s);background:var(--bg1);color:var(--tx1);font-size:12px;font-family:var(--font)}
+.controls input{flex:1;min-width:110px}
+.controls button{padding:6px 10px;border:1px solid var(--bd2);border-radius:var(--rad-s);background:var(--bg1);color:var(--tx1);font-size:12px;cursor:pointer;font-family:var(--font)}
+.controls button:hover{background:var(--bg2)}
+.counter{font-size:11px;color:var(--tx2);padding:.4rem 1rem}
+.list{padding:0 .75rem .75rem}
+/* CARDS */
+.card{background:var(--bg1);border:1px solid var(--bd3);border-radius:var(--rad);margin-bottom:8px;overflow:hidden}
+.ch{display:flex;align-items:flex-start;gap:9px;padding:12px 14px 9px;cursor:pointer;user-select:none}
+.ch:hover{background:var(--bg2)}
+.qn{color:#fff;font-size:11px;font-weight:600;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.qn.std{background:var(--acc)}.qn.cust{background:#7B2D8B}
+.qt{flex:1;font-size:13px;color:var(--tx1);line-height:1.5}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;align-items:center}
+.tag{font-size:10px;padding:2px 7px;border-radius:20px;border:1px solid var(--bd3);color:var(--tx2);background:var(--bg2)}
+.tag.dm{background:#EAF3DE;color:#3B6D11;border-color:#C0DD97}
+.tag.dg{background:var(--ora-l);color:var(--ora);border-color:#FAC775}
+.tag.dh{background:var(--red-l);color:var(--red);border-color:#F7C1C1}
+.tag.ct{background:var(--grn-l);color:var(--grn);border-color:#9FD8BC}
+.tag.cu{background:#F3E8FF;color:#6B21A8;border-color:#C084FC}
+.chev{color:var(--tx2);font-size:11px;margin-top:3px;transition:transform .2s}
+.card.open .chev{transform:rotate(90deg)}
+.cb{display:none;border-top:1px solid var(--bd3);padding:10px 14px 12px;background:var(--bg1)}
+.card.open .cb{display:block}
+.vbox{background:var(--bg2);border-radius:var(--rad-s);padding:10px 12px;margin-bottom:10px;border:1px solid var(--bd3)}
+.vlbl{font-size:10px;color:var(--tx2);margin-bottom:3px}
+.vq{font-size:13px;color:var(--tx1);font-weight:500}
+.opts{list-style:none;margin:8px 0}
+.opts li{font-size:12px;padding:3px 0;color:var(--tx2);display:flex;gap:7px}
+.opts li .lt{font-weight:600;color:var(--tx1);min-width:14px}
+.ar{display:flex;align-items:center;gap:8px;margin-top:5px}
+.al{font-size:11px;color:var(--tx2)}
+.av{font-size:12px;font-weight:600;color:#3B6D11;background:#EAF3DE;border:1px solid #C0DD97;padding:2px 9px;border-radius:20px}
+.brow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.btn{padding:6px 11px;border-radius:var(--rad-s);font-size:12px;cursor:pointer;border:1px solid var(--bd2);background:var(--bg1);color:var(--tx1);font-family:var(--font)}
+.btn:hover{background:var(--bg2)}
+.btn-acc{border-color:var(--acc);color:var(--acc);background:var(--acc-l)}
+.btn-acc:hover{background:var(--acc-ll)}
+.btn-grn{border-color:var(--grn);color:var(--grn);background:var(--grn-l)}
+.btn-grn:hover{background:#BEE6D2}
+.btn-red{border-color:var(--red);color:var(--red);background:var(--red-l)}
+.btn-ora{border-color:var(--ora);color:var(--ora);background:var(--ora-l)}
+.btn-copied{color:#3B6D11;border-color:#C0DD97;background:#EAF3DE}
+.mutload{font-size:11px;color:var(--tx2);font-style:italic;padding:4px 0}
+.del-row{display:inline-flex;align-items:center;gap:5px}
+.del-row span{font-size:12px;color:var(--red);font-weight:500}
+.bdy{padding:3px 9px;border-radius:var(--rad-s);border:1px solid var(--red);color:#fff;background:var(--red);font-size:11px;cursor:pointer;font-family:var(--font)}
+.bdn{padding:3px 9px;border-radius:var(--rad-s);border:1px solid var(--bd2);background:var(--bg1);color:var(--tx1);font-size:11px;cursor:pointer;font-family:var(--font)}
+.nores{text-align:center;color:var(--tx2);padding:2rem;font-size:13px}
+.np{margin-top:10px}
+.np-lbl{font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;font-weight:600}
+.np-ta{width:100%;padding:8px 10px;border:1px solid var(--bd2);border-radius:var(--rad-s);background:var(--bg1);color:var(--tx1);font-size:12px;height:80px;resize:vertical;font-family:var(--font)}
+.ep{background:var(--bg2);border-radius:var(--rad-s);padding:12px 14px;border:1px solid var(--acc);margin-top:10px}
+.ep-title{font-size:12px;font-weight:600;color:var(--acc);margin-bottom:10px}
+.fg{margin-bottom:8px}
+.fg label{display:block;font-size:10px;font-weight:600;color:var(--tx2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.fg input,.fg select,.fg-ta{width:100%;padding:6px 9px;border:1px solid var(--bd2);border-radius:var(--rad-s);background:var(--bg1);color:var(--tx1);font-size:12px;font-family:var(--font)}
+.fg-ta{height:120px;resize:vertical}
+.fgrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:7px;margin-bottom:8px}
+.psect{background:var(--bg1);border-radius:var(--rad-s);padding:10px 12px;border:1px solid var(--bd3);margin:8px 0}
+.psect-t{font-size:11px;font-weight:600;color:var(--tx1);margin-bottom:8px}
+.ep-btns{display:flex;gap:7px;margin-top:10px}
+/* CART */
+.dhint{font-size:11px;color:var(--tx2);padding:.5rem 1.5rem .1rem;display:none;background:var(--bg2)}
+.cempty{text-align:center;color:var(--tx2);padding:2rem 1rem;font-size:13px;line-height:1.8;background:var(--bg2)}
+.clwrap{padding:0 .75rem;background:var(--bg2)}
+.ccard{background:var(--bg1);border:1px solid var(--bd3);border-radius:var(--rad);margin-bottom:8px;padding:10px 12px;transition:opacity .15s}
+.ccard.dragging{opacity:.3}
+.ccard.dragover{outline:2px solid var(--acc);background:var(--acc-l)}
+.chead{display:flex;align-items:center;gap:7px}
+.dhandle{cursor:grab;color:var(--tx2);font-size:18px;letter-spacing:-2px;flex-shrink:0;user-select:none}
+.dhandle:active{cursor:grabbing}
+.cnum{background:var(--grn);color:#fff;font-size:11px;font-weight:600;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cq{flex:1;font-size:12px;color:var(--tx1);line-height:1.5;min-width:0}
+.obts{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.obt{padding:2px 7px;border:1px solid var(--bd2);border-radius:3px;background:var(--bg1);color:var(--tx2);font-size:10px;cursor:pointer;font-family:var(--font)}
+.obt:hover:not(:disabled){background:var(--bg2)}.obt:disabled{opacity:.2;cursor:default}
+.crem{border:none;background:none;color:var(--tx2);font-size:14px;cursor:pointer;padding:2px 3px;flex-shrink:0}
+.crem:hover{color:var(--red)}
+.prow{display:flex;gap:4px;flex-wrap:wrap;margin:5px 0 3px}
+.ppill{font-size:10px;padding:2px 6px;border-radius:20px;background:var(--bg2);border:1px solid var(--bd3);color:var(--tx2);white-space:nowrap}
+.ppill b{color:var(--tx1);font-weight:600}
+/* OVERVIEW */
+.toverzicht{background:var(--bg1);border:1px solid var(--bd3);border-radius:var(--rad);margin:8px .75rem 0;padding:12px 14px;display:none}
+.tov-title{font-size:10px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.tov-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;margin-bottom:10px}
+.tov-stat{background:var(--bg2);border-radius:var(--rad-s);padding:7px 6px;text-align:center;border:1px solid var(--bd3)}
+.tov-val{font-size:16px;font-weight:600}.tov-lbl{font-size:9px;color:var(--tx2);margin-top:1px;line-height:1.3}.tov-sub{font-size:9px;font-weight:600;margin-top:1px}
+.vwrap{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.vtrack{flex:1;height:6px;background:var(--bd3);border-radius:3px;overflow:hidden}
+.vfill{height:100%;border-radius:3px;transition:width .5s}
+.bdist{display:flex;gap:4px;flex-wrap:wrap}.bdlbl{font-size:10px;color:var(--tx2);margin-bottom:4px}
+.bpill{font-size:10px;padding:2px 8px;border-radius:20px}
+/* FORMAT */
+.fmtwrap{padding:.8rem .75rem .4rem;display:none;border-top:1px solid var(--bd3);background:var(--bg2)}
+.fmtlbl{font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:7px}
+.fmtbtns{display:flex;gap:7px;flex-wrap:wrap}
+.fmtbtn{flex:1;min-width:120px;padding:9px 12px;border:1px solid var(--bd2);border-radius:var(--rad-s);background:var(--bg1);color:var(--tx2);cursor:pointer;text-align:left;font-family:var(--font)}
+.fmtbtn:hover{background:var(--bg2)}
+.fmtbtn.active{border-color:var(--acc);background:var(--acc-l);color:#1a4a8a}
+.fmtname{display:block;font-size:12px;font-weight:600;margin-bottom:2px}
+.fmtdesc{display:block;font-size:10px;opacity:.75}
+.pvbadge{font-size:9px;background:#1B4F72;color:#fff;padding:1px 4px;border-radius:3px;margin-left:3px;vertical-align:middle}
+.cfooter{display:flex;gap:7px;padding:.6rem .75rem 1.25rem;flex-wrap:wrap;background:var(--bg2)}
+.genbtn{flex:1;padding:10px 14px;background:var(--acc);color:#fff;border:none;border-radius:var(--rad-s);font-size:13px;font-weight:600;cursor:pointer;min-width:140px;font-family:var(--font)}
+.genbtn:hover{filter:brightness(1.1)}
+.genbtn:disabled{opacity:.6;cursor:default}
+/* AANMAKEN */
+.ctabs{display:flex;gap:7px;padding:.9rem 1rem .5rem;border-bottom:1px solid var(--bd3);background:var(--bg2)}
+.ctab{padding:7px 14px;border:1px solid var(--bd2);border-radius:var(--rad-s);background:var(--bg1);color:var(--tx2);font-size:12px;cursor:pointer;font-family:var(--font)}
+.ctab.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.cform{padding:1rem;background:var(--bg2)}
+.fb{margin-top:8px;padding:8px 12px;border-radius:var(--rad-s);font-size:12px;display:none}
+.fb.ok{background:#EAF3DE;color:#3B6D11;border:1px solid #C0DD97;display:block}
+.fb.err{background:var(--red-l);color:var(--red);border:1px solid #F7C1C1;display:block}
+.qpreview{background:var(--bg2);border-radius:var(--rad-s);padding:12px 14px;border:1px solid var(--bd3);margin-top:12px;display:none}
+.file-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+/* SETTINGS MODAL */
+.s-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.s-modal{background:var(--bg1);border-radius:12px;padding:0;width:min(500px,95vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.s-header{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.5rem;border-bottom:1px solid var(--bd3)}
+.s-header h2{font-size:18px;font-weight:600;color:var(--tx1)}
+.s-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--tx2);padding:2px 6px;border-radius:4px}
+.s-close:hover{background:var(--bg2)}
+.s-body{padding:1.5rem}
+.s-section{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--bd3)}
+.s-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.s-section h3{font-size:14px;font-weight:600;color:var(--tx1);margin-bottom:8px}
+.s-section p{font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:8px}
+.s-section a{color:var(--acc);text-decoration:none}
+.s-section a:hover{text-decoration:underline}
+.key-status{font-size:12px;padding:6px 10px;border-radius:var(--rad-s);background:var(--bg2);border:1px solid var(--bd3);margin:8px 0}
+.key-input{width:100%;padding:8px 10px;border:1px solid var(--bd2);border-radius:var(--rad-s);background:var(--bg1);color:var(--tx1);font-size:13px;font-family:var(--font);margin-bottom:10px}
+.s-btns{display:flex;gap:8px;flex-wrap:wrap}
+.s-save{padding:8px 16px;background:var(--acc);color:#fff;border:none;border-radius:var(--rad-s);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.s-save:hover{filter:brightness(1.1)}
+.s-clear{padding:8px 14px;border:1px solid var(--bd2);background:var(--bg1);color:var(--tx1);border-radius:var(--rad-s);font-size:13px;cursor:pointer;font-family:var(--font)}
+.s-clear:hover{background:var(--bg2)}
+.deploy-steps{background:var(--bg2);border-radius:var(--rad-s);padding:12px 14px;font-size:12px;color:var(--tx2);line-height:1.8;border:1px solid var(--bd3)}
+.deploy-steps code{background:var(--bd3);padding:1px 5px;border-radius:3px;font-size:11px;color:var(--tx1)}
+</style>
+</head>
+<body>
+<!-- SETTINGS MODAL -->
+<div class="s-overlay" id="s-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="s-modal">
+    <div class="s-header">
+      <h2>⚙️ Instellingen</h2>
+      <button class="s-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="s-body">
+      <div class="s-section">
+        <h3>🤖 Anthropic API-sleutel</h3>
+        <p>Nodig voor de <strong>AI-mutatie</strong> functie bij eigen vragen. Gratis account via <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.</p>
+        <div class="key-status" id="key-status">Laden...</div>
+        <input class="key-input" type="password" id="key-input" placeholder="sk-ant-api03-...">
+        <div class="s-btns">
+          <button class="s-save" onclick="saveApiKey()">✓ Opslaan</button>
+          <button class="s-clear" onclick="clearApiKey()" id="s-clear">Sleutel verwijderen</button>
+        </div>
+        <p style="margin-top:10px;font-size:11px">🔒 De sleutel wordt opgeslagen in je browser (localStorage) en nooit gedeeld.</p>
+      </div>
+      <div class="s-section">
+        <h3>🚀 GitHub Pages deployment</h3>
+        <div class="deploy-steps">
+          1. Maak een GitHub repo aan (bijv. <code>wiskunde-itembank</code>)<br>
+          2. Upload <code>index.html</code> naar de root<br>
+          3. Ga naar <code>Settings &gt; Pages &gt; Source: main /</code><br>
+          4. Je app is live op <code>https://[naam].github.io/wiskunde-itembank/</code>
+        </div>
+      </div>
+      <div class="s-section">
+        <h3>ℹ️ Over deze app</h3>
+        <p>Wiskunde Itembank v2.0 · Klas 4–6 · IRT 2PL · Bloom-taxonomie<br>
+        Exporteert naar <strong>QTI 3.0</strong> (Canvas, Moodle, Brightspace) en <strong>TestVision QTI 2.1</strong> (Paragin)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+<!-- API KEY BANNER -->
+<div class="api-banner" id="api-banner" style="display:none">
+  ⚠️ Geen API-sleutel ingesteld — AI-mutatie voor eigen vragen is uitgeschakeld.
+  <a onclick="openSettings()">Sleutel instellen →</a>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-text">
+    <h1>Wiskunde Itembank — Klas 4–6</h1>
+    <p>IRT 2PL · Bloom · QTI 3.0 &amp; TestVision · Eigen vragen aanmaken &amp; importeren</p>
+  </div>
+  <button class="settings-btn" onclick="openSettings()" title="Instellingen">⚙️</button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" data-tab="bank" onclick="switchTab('bank')">Itembank</button>
+  <button class="tab" data-tab="cart" onclick="switchTab('cart')">Winkelmand 🛒<span class="cbadge" id="cbadge">0</span></button>
+  <button class="tab" data-tab="create" onclick="switchTab('create')">Aanmaken ✏️</button>
+</div>
+
+<!-- BANK PANEL -->
+<div id="panel-bank" class="panel active">
+  <div class="controls">
+    <input type="text" id="search" placeholder="Zoek in vragen..." oninput="render()">
+    <select id="fcat" onchange="render()">
+      <option value="">Alle categorieën</option>
+      <option>Vergelijkingen</option><option>Functies</option>
+      <option value="Exponenten & logaritmen">Exp. &amp; log.</option>
+      <option value="Rijen & reeksen">Rijen</option>
+      <option value="Rekenen & getallen">Rekenen</option>
+      <option>Geïmporteerd</option><option>Anders</option>
+    </select>
+    <select id="fdiff" onchange="render()">
+      <option value="">Alle niveaus</option>
+      <option value="makkelijk">Makkelijk</option>
+      <option value="gemiddeld">Gemiddeld</option>
+      <option value="moeilijk">Moeilijk</option>
+    </select>
+    <button onclick="toggleAll(true)">Alles open</button>
+    <button onclick="toggleAll(false)">Alles dicht</button>
+  </div>
+  <div class="counter" id="counter"></div>
+  <div class="list" id="list"></div>
+</div>
+
+<!-- CART PANEL -->
+<div id="panel-cart" class="panel">
+  <div class="dhint" id="dhint">⠿ Versleep · ▲▼ · 🔀 Randomiseer</div>
+  <div class="clwrap" id="clist" ondragover="event.preventDefault()"></div>
+  <div class="toverzicht" id="toverzicht"></div>
+  <div class="fmtwrap" id="fmtwrap">
+    <div class="fmtlbl">Exportformaat</div>
+    <div class="fmtbtns">
+      <button class="fmtbtn active" data-fmt="qti30" onclick="setFmt(this)"><span class="fmtname">QTI 3.0</span><span class="fmtdesc">Canvas · Moodle · Brightspace</span></button>
+      <button class="fmtbtn" data-fmt="testvision" onclick="setFmt(this)"><span class="fmtname">TestVision<span class="pvbadge">Paragin</span></span><span class="fmtdesc">QTI 2.1 · NL standaard</span></button>
+    </div>
+  </div>
+  <div class="cfooter" id="cfooter" style="display:none">
+    <button class="btn btn-ora" onclick="clearCart()">Wis mand</button>
+    <button class="btn btn-ora" onclick="randomizeCart()">🔀 Randomiseer</button>
+    <button class="genbtn" id="gen-btn" onclick="generatePackage()">📦 Genereer &amp; download</button>
+  </div>
+</div>
+
+<!-- AANMAKEN PANEL -->
+<div id="panel-create" class="panel">
+  <div class="ctabs">
+    <button class="ctab active" id="ctab-m" onclick="showCMode('manual')">✏️ Handmatig</button>
+    <button class="ctab" id="ctab-q" onclick="showCMode('qti')">📥 QTI importeren</button>
+  </div>
+  <div id="cmode-manual" class="cform">
+    <div class="fg"><label>Vraagtekst</label><input type="text" id="f-q" placeholder="Bijv. Los op: 3x + 5 = 17"></div>
+    <div class="fgrow">
+      <div class="fg"><label>Optie A</label><input type="text" id="f-a"></div>
+      <div class="fg"><label>Optie B</label><input type="text" id="f-b"></div>
+      <div class="fg"><label>Optie C</label><input type="text" id="f-c"></div>
+      <div class="fg"><label>Optie D</label><input type="text" id="f-d"></div>
+    </div>
+    <div class="fgrow">
+      <div class="fg"><label>Juist antwoord</label><select id="f-ans"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+      <div class="fg"><label>Categorie</label><select id="f-cat"><option>Vergelijkingen</option><option>Functies</option><option value="Exponenten & logaritmen">Exponenten &amp; logaritmen</option><option value="Rijen & reeksen">Rijen &amp; reeksen</option><option value="Rekenen & getallen">Rekenen &amp; getallen</option><option>Anders</option></select></div>
+      <div class="fg"><label>Moeilijkheid</label><select id="f-diff"><option value="makkelijk">Makkelijk</option><option value="gemiddeld" selected>Gemiddeld</option><option value="moeilijk">Moeilijk</option></select></div>
+    </div>
+    <div class="psect">
+      <div class="psect-t">Psychometrische data <span style="font-size:10px;color:var(--tx2);font-weight:400">— optioneel, anders automatisch geschat</span></div>
+      <div class="fgrow">
+        <div class="fg"><label>b (moeilijkheid)</label><input type="number" id="p-b" step="0.01" min="-3" max="3" placeholder="-0.82"></div>
+        <div class="fg"><label>a (discriminatie)</label><input type="number" id="p-a" step="0.01" min="0.1" max="3" placeholder="1.14"></div>
+        <div class="fg"><label>p-waarde (0-1)</label><input type="number" id="p-pv" step="0.01" min="0" max="1" placeholder="0.78"></div>
+        <div class="fg"><label>rit (0-1)</label><input type="number" id="p-rit" step="0.01" min="0" max="1" placeholder="0.42"></div>
+      </div>
+      <div class="fg" style="max-width:240px"><label>Bloom-niveau</label><select id="p-bloom"><option value="1">1 — Onthouden</option><option value="2">2 — Begrijpen</option><option value="3" selected>3 — Toepassen</option><option value="4">4 — Analyseren</option><option value="5">5 — Evalueren</option><option value="6">6 — Creëren</option></select></div>
+    </div>
+    <div id="create-fb" class="fb"></div>
+    <button class="btn btn-grn" style="padding:9px 18px;font-size:13px;font-weight:600" onclick="addCustomQ()">+ Voeg toe aan itembank</button>
+  </div>
+  <div id="cmode-qti" class="cform" style="display:none">
+    <div class="fg">
+      <label>QTI 3.0 of 2.1 XML-bestand</label>
+      <div class="file-row">
+        <label class="btn btn-acc" for="qti-file" style="cursor:pointer">📁 Kies XML</label>
+        <input type="file" id="qti-file" accept=".xml" style="display:none" onchange="handleQTIFile(event)">
+        <span style="font-size:11px;color:var(--tx2)" id="qti-fnm">Geen bestand</span>
+      </div>
+    </div>
+    <div class="fg"><label>Of plak XML hier</label><textarea class="fg-ta" id="qti-paste" placeholder="Plak een QTI 3.0 of QTI 2.1 XML-item hier..."></textarea></div>
+    <button class="btn btn-acc" style="margin-right:7px" onclick="previewQTI()">👁 Preview</button>
+    <button class="btn btn-grn" onclick="importQTI()">📥 Importeer</button>
+    <div id="qti-fb" class="fb"></div>
+    <div id="qti-preview" class="qpreview"></div>
+  </div>
+</div>
+</div><!-- end .app -->
+<script>
+/* ============================================================
+   INSTELLINGEN & API-SLEUTEL
+   ============================================================ */
+var API_KEY_SK = 'wiskunde_itembank_api_key';
+function getApiKey(){return localStorage.getItem(API_KEY_SK)||'';}
+function openSettings(msg){
+  document.getElementById('s-overlay').style.display='flex';
+  updateKeyStatus();
+  if(msg){var el=document.getElementById('s-msg');if(el){el.textContent=msg;el.style.display='block';}}
+}
+function closeSettings(){document.getElementById('s-overlay').style.display='none';}
+function updateKeyStatus(){
+  var k=getApiKey(),el=document.getElementById('key-status');
+  if(!el)return;
+  el.innerHTML=k?'<span style="color:#3B6D11">&#10003; Sleutel ingesteld: '+k.substring(0,16)+'...</span>':'<span style="color:var(--red)">&#10007; Geen sleutel &mdash; AI-mutatie niet beschikbaar</span>';
+  document.getElementById('key-input').value='';
+}
+function saveApiKey(){
+  var k=document.getElementById('key-input').value.trim();
+  if(!k){alert('Voer een API-sleutel in.');return;}
+  if(!k.startsWith('sk-ant')){alert('Ongeldig formaat. Sleutels beginnen met "sk-ant".');return;}
+  localStorage.setItem(API_KEY_SK,k);
+  updateKeyStatus();updateKeyBanner();
+  alert('Sleutel opgeslagen!');
+}
+function clearApiKey(){
+  if(!confirm('Sleutel verwijderen?'))return;
+  localStorage.removeItem(API_KEY_SK);
+  updateKeyStatus();updateKeyBanner();
+}
+function updateKeyBanner(){
+  var el=document.getElementById('api-banner');
+  if(el)el.style.display=getApiKey()?'none':'flex';
+}
+
+/* ============================================================
+   XML HELPERS
+   ============================================================ */
+function xe(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function pad(n){return String(n).padStart(3,'0');}
+
+/* ============================================================
+   QTI XML GENERATORS
+   ============================================================ */
+function qti30Item(iid,item){
+  var cid='choice_'+item.antwoord.toLowerCase();
+  var ps=item.psychometrics||{};
+  var ch=item.opties.map(function(o,i){return '      <qti-simple-choice identifier="choice_'+'abcd'[i]+'">'+xe(o)+'</qti-simple-choice>';}).join('\n');
+  return ['<?xml version="1.0" encoding="UTF-8"?>',
+    '<!-- b='+ps.b+' a='+ps.a+' p='+ps.p+' rit='+ps.rit+' Bloom='+ps.bloom+' | onderwerp: '+xe(item.onderwerp)+'|niveau: '+item.niveau+' -->',
+    '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"',
+    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+    '  xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiasi_v3p0.xsd"',
+    '  identifier="'+iid+'" title="'+xe(item.vraag.substring(0,80))+'" adaptive="false" time-dependent="false">',
+    '  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">',
+    '    <qti-correct-response><qti-value>'+cid+'</qti-value></qti-correct-response>',
+    '  </qti-response-declaration>',
+    '  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float">',
+    '    <qti-default-value><qti-value>0</qti-value></qti-default-value>',
+    '  </qti-outcome-declaration>',
+    '  <qti-item-body>',
+    '    <p>'+xe(item.vraag)+'</p>',
+    '    <qti-choice-interaction response-identifier="RESPONSE" shuffle="false" max-choices="1">',
+    '      <qti-prompt>Kies het juiste antwoord:</qti-prompt>',
+    ch,
+    '    </qti-choice-interaction>',
+    '  </qti-item-body>',
+    '  <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"/>',
+    '</qti-assessment-item>'].join('\n');
+}
+function qti30Test(tid,n,iids){
+  var refs=iids.map(function(iid,i){return '        <qti-assessment-item-ref identifier="ref_'+pad(i+1)+'" href="items/'+iid+'.xml"/>';}).join('\n');
+  return ['<?xml version="1.0" encoding="UTF-8"?>',
+    '<qti-assessment-test xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"',
+    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+    '  xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiasi_v3p0.xsd"',
+    '  identifier="'+tid+'" title="Wiskunde Toets ('+n+' vragen)">',
+    '  <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"><qti-default-value><qti-value>0</qti-value></qti-default-value></qti-outcome-declaration>',
+    '  <qti-test-part identifier="part_001" navigation-mode="linear" submission-mode="simultaneous">',
+    '    <qti-assessment-section identifier="section_001" title="Vragen" visible="true">',
+    refs,'    </qti-assessment-section>','  </qti-test-part>','</qti-assessment-test>'].join('\n');
+}
+function qti30Manifest(mid,tid,iids){
+  var deps=iids.map(function(iid){return '      <dependency identifierref="'+iid+'"/>';}).join('\n');
+  var res=iids.map(function(iid){return '    <resource identifier="'+iid+'" type="imsqti_item_xmlv3p0" href="items/'+iid+'.xml">\n      <file href="items/'+iid+'.xml"/>\n    </resource>';}).join('\n');
+  return ['<?xml version="1.0" encoding="UTF-8"?>',
+    '<manifest identifier="'+mid+'" xmlns="http://www.imsglobal.org/xsd/imscp_v1p1"',
+    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+    '  xsi:schemaLocation="http://www.imsglobal.org/xsd/imscp_v1p1 http://www.imsglobal.org/xsd/imscp_v1p1.xsd">',
+    '  <metadata><schema>IMS Content</schema><schemaversion>1.2</schemaversion></metadata>',
+    '  <organizations/>','  <resources>',
+    '    <resource identifier="'+tid+'" type="imsqti_test_xmlv3p0" href="test.xml">',
+    '      <file href="test.xml"/>',deps,'    </resource>',res,'  </resources>','</manifest>'].join('\n');
+}
+function qti21Item(iid,item){
+  var cid='choice_'+item.antwoord.toLowerCase();
+  var ps=item.psychometrics||{};
+  var ch=item.opties.map(function(o,i){return '      <simpleChoice identifier="choice_'+'abcd'[i]+'">'+xe(o)+'</simpleChoice>';}).join('\n');
+  return ['<?xml version="1.0" encoding="UTF-8"?>',
+    '<!-- b='+ps.b+' a='+ps.a+' p='+ps.p+' rit='+ps.rit+' Bloom='+ps.bloom+' | onderwerp: '+xe(item.onderwerp)+'|niveau: '+item.niveau+' -->',
+    '<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"',
+    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+    '  xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"',
+    '  identifier="'+iid+'" title="'+xe(item.vraag.substring(0,80))+'" adaptive="false" timeDependent="false">',
+    '  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">',
+    '    <correctResponse><value>'+cid+'</value></correctResponse>',
+    '  </responseDeclaration>',
+    '  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">',
+    '    <defaultValue><value>0</value></defaultValue>',
+    '  </outcomeDeclaration>',
+    '  <itemBody>',
+    '    <p>'+xe(item.vraag)+'</p>',
+    '    <choiceInteraction responseIdentifier="RESPONSE" shuffle="false" maxChoices="1">',
+    '      <prompt>Kies het juiste antwoord:</prompt>',
+    ch,'    </choiceInteraction>','  </itemBody>',
+    '  <responseProcessing template="http://www.imsglobal.org/question/qti_v2p1/rptemplates/match_correct"/>',
+    '</assessmentItem>'].join('\n');
+}
+function qti21Test(tid,n,iids){
+  var refs=iids.map(function(iid,i){return '        <assessmentItemRef identifier="ref_'+pad(i+1)+'" href="items/'+iid+'.xml"/>';}).join('\n');
+  return ['<?xml version="1.0" encoding="UTF-8"?>',
+    '<assessmentTest xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1"',
+    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+    '  xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/imsqti_v2p1.xsd"',
+    '  identifier="'+tid+'" title="Wiskunde Toets ('+n+' vragen)">',
+    '  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float"><defaultValue><value>0</value></defaultValue></outcomeDeclaration>',
+    '  <testPart identifier="testPart001" navigationMode="linear" submissionMode="simultaneous">',
+    '    <assessmentSection identifier="section001" title="Vragen" visible="true">',
+    refs,'    </assessmentSection>','  </testPart>','</assessmentTest>'].join('\n');
+}
+function qti21Manifest(mid,tid,iids){
+  var deps=iids.map(function(iid){return '      <dependency identifierref="'+iid+'"/>';}).join('\n');
+  var res=iids.map(function(iid){return '    <resource identifier="'+iid+'" type="imsqti_item_xmlv2p1" href="items/'+iid+'.xml">\n      <file href="items/'+iid+'.xml"/>\n    </resource>';}).join('\n');
+  return ['<?xml version="1.0" encoding="UTF-8"?>',
+    '<manifest identifier="'+mid+'" xmlns="http://www.imsglobal.org/xsd/imscp_v1p1"',
+    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+    '  xsi:schemaLocation="http://www.imsglobal.org/xsd/imscp_v1p1 http://www.imsglobal.org/xsd/imscp_v1p1.xsd">',
+    '  <metadata><schema>IMS Content</schema><schemaversion>1.2</schemaversion></metadata>',
+    '  <organizations/>','  <resources>',
+    '    <resource identifier="'+tid+'" type="imsqti_test_xmlv2p1" href="test.xml">',
+    '      <file href="test.xml"/>',deps,'    </resource>',res,'  </resources>','</manifest>'].join('\n');
+}
+function psychoXml(items,iids){
+  var d=new Date().toISOString().split('T')[0];
+  var its=items.map(function(item,i){
+    var ps=item.psychometrics||{};
+    return ['    <item identifier="'+iids[i]+'">',
+      '      <titel>'+xe(item.vraag.substring(0,80))+'</titel>',
+      '      <onderwerp>'+xe(item.onderwerp)+'</onderwerp><niveau>'+item.niveau+'</niveau>',
+      '      <irt model="2PL">',
+      '        <bParameter beschrijving="moeilijkheid">'+ps.b+'</bParameter>',
+      '        <aParameter beschrijving="discriminatie">'+ps.a+'</aParameter>',
+      '        <standaardfout><se_b>0.18</se_b><se_a>0.22</se_a></standaardfout>',
+      '      </irt>',
+      '      <bloom><niveau>'+ps.bloom+'</niveau><label>'+ps.bloomLabel+'</label></bloom>',
+      '      <klassiekeTeststatistieken>',
+      '        <pWaarde>'+ps.p+'</pWaarde><rit>'+ps.rit+'</rit>',
+      '      </klassiekeTeststatistieken>',
+      '    </item>'].join('\n');
+  }).join('\n');
+  return ['<?xml version="1.0" encoding="UTF-8"?>',
+    '<psychometrics xmlns="http://paragin.nl/qti/psychometrics/v1.0"',
+    '  version="1.0" calibratiedatum="'+d+'" irtModel="2PL">',
+    '  <items>',its,'  </items>','</psychometrics>'].join('\n');
+}
+function antwoordsleutel(items,iids){
+  var lines=['ANTWOORDSLEUTEL','='.repeat(52),''];
+  items.forEach(function(item,i){
+    var ai='ABCD'.indexOf(item.antwoord),ps=item.psychometrics||{};
+    lines.push('Vraag '+(i+1)+': '+item.vraag);
+    lines.push('Antwoord: '+item.antwoord+' — '+item.opties[ai]);
+    lines.push('IRT: b='+(ps.b||'?')+', a='+(ps.a||'?')+', p='+(ps.p||'?')+', rit='+(ps.rit||'?'));
+    lines.push('Bloom: '+(ps.bloom||'?')+' — '+(ps.bloomLabel||'?'));
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+/* ============================================================
+   ZIP DOWNLOAD (vervangt sendPrompt)
+   ============================================================ */
+async function generatePackage(){
+  if(typeof JSZip==='undefined'){alert('JSZip laadt nog. Probeer opnieuw.');return;}
+  if(!cart.length){alert('Winkelmand is leeg.');return;}
+  var ab=document.querySelector('.fmtbtn.active'),fmt=ab?ab.dataset.fmt:'qti30';
+  var btn=document.getElementById('gen-btn');
+  if(btn){btn.textContent='\u23f3 Genereren...';btn.disabled=true;}
+  try{
+    var zip=new JSZip();
+    var items=cart.map(function(c){return{vraag:c.q,opties:c.opts,antwoord:c.ans,onderwerp:c.cat,niveau:c.diff,psychometrics:c.psych||{}};});
+    var n=items.length,iids=items.map(function(_,i){return 'item_'+pad(i+1);}),tid='toets_001';
+    zip.file('antwoordsleutel.txt',antwoordsleutel(items,iids));
+    zip.file('psychometrics.xml',psychoXml(items,iids));
+    var filename;
+    if(fmt==='qti30'){
+      filename='wiskunde_qti30.zip';
+      zip.file('imsmanifest.xml',qti30Manifest('manifest_qti30',tid,iids));
+      zip.file('test.xml',qti30Test(tid,n,iids));
+      items.forEach(function(item,i){zip.file('items/'+iids[i]+'.xml',qti30Item(iids[i],item));});
+    } else {
+      filename='wiskunde_testvision_qti21.zip';
+      zip.file('imsmanifest.xml',qti21Manifest('manifest_tv',tid,iids));
+      zip.file('test.xml',qti21Test(tid,n,iids));
+      items.forEach(function(item,i){zip.file('items/'+iids[i]+'.xml',qti21Item(iids[i],item));});
+    }
+    var blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},2000);
+    if(btn){btn.textContent='\u2713 Gedownload!';setTimeout(function(){btn.textContent='\uD83D\uDCE6 Genereer & download';btn.disabled=false;},2200);}
+  }catch(err){
+    alert('Export mislukt: '+err.message);
+    if(btn){btn.textContent='\uD83D\uDCE6 Genereer & download';btn.disabled=false;}
+  }
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function gcd(a,b){return b===0?a:gcd(b,a%b);}
+function frac(n,d){var g=gcd(Math.abs(n),Math.abs(d));return d<0?[-n/g,-d/g]:[n/g,d/g];}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function r2(v){return Math.round(v*100)/100;}
+function diffCls(d){return d==='makkelijk'?'dm':d==='gemiddeld'?'dg':'dh';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* PRNG */
+function mkRng(seed){var s=((seed%2147483647)+2147483647)%2147483647||1;return{next:function(){s=(s*16807)%2147483647;return(s-1)/2147483646;},gauss:function(){var u=this.next()||1e-10,v=this.next();return Math.sqrt(-2*Math.log(u))*Math.cos(6.2831853*v);}};}
+function strHash(s){var h=5381;for(var i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))&0x7fffffff;return h||1;}
+
+/* PSYCHOMETRICS */
+var IRT={makkelijk:{b_mu:-0.85,b_sd:0.28,a_mu:1.05,a_sd:0.18,p_mu:0.79,p_sd:0.04,rit_mu:0.34,rit_sd:0.05},gemiddeld:{b_mu:0.10,b_sd:0.35,a_mu:1.20,a_sd:0.20,p_mu:0.63,p_sd:0.05,rit_mu:0.43,rit_sd:0.05},moeilijk:{b_mu:0.95,b_sd:0.28,a_mu:1.35,a_sd:0.18,p_mu:0.47,p_sd:0.04,rit_mu:0.51,rit_sd:0.05}};
+var BLOOM={'Vergelijkingen':{makkelijk:[3,'Toepassen'],gemiddeld:[3,'Toepassen'],moeilijk:[4,'Analyseren']},'Functies':{makkelijk:[2,'Begrijpen'],gemiddeld:[3,'Toepassen'],moeilijk:[4,'Analyseren']},'Exponenten & logaritmen':{makkelijk:[1,'Onthouden'],gemiddeld:[3,'Toepassen'],moeilijk:[4,'Analyseren']},'Rijen & reeksen':{makkelijk:[2,'Begrijpen'],gemiddeld:[3,'Toepassen'],moeilijk:[4,'Analyseren']},'Rekenen & getallen':{makkelijk:[1,'Onthouden'],gemiddeld:[3,'Toepassen'],moeilijk:[4,'Analyseren']}};
+var BLC={1:{bg:'#E1F5EE',tc:'#085041',bc:'#5DCAA5'},2:{bg:'#E6F1FB',tc:'#0C447C',bc:'#85B7EB'},3:{bg:'#FAEEDA',tc:'#633806',bc:'#EF9F27'},4:{bg:'#FAECE7',tc:'#712B13',bc:'#F0997B'},5:{bg:'#FCEBEB',tc:'#791F1F',bc:'#F09595'},6:{bg:'#EEEDFE',tc:'#26215C',bc:'#AFA9EC'}};
+var BLLBL=['','Onthouden','Begrijpen','Toepassen','Analyseren','Evalueren','Cre\xebren'];
+function genPsych(q,niveau,cat){var rng=mkRng(strHash((q||'')+(niveau||'')+(cat||'')));var p=IRT[niveau]||IRT.gemiddeld;var b=r2(clamp(p.b_mu+rng.gauss()*p.b_sd,-2.5,2.5));var a=r2(clamp(p.a_mu+rng.gauss()*p.a_sd,0.50,2.00));var pv=r2(clamp(p.p_mu+rng.gauss()*p.p_sd,0.20,0.95));var rit=r2(clamp(p.rit_mu+rng.gauss()*p.rit_sd,0.10,0.75));var bmap=BLOOM[cat]||BLOOM['Vergelijkingen'];var bl=bmap[niveau]||bmap.gemiddeld;return{b:b,a:a,p:pv,rit:rit,bloom:bl[0],bloomLabel:bl[1]};}
+function calcSummary(cart){if(!cart.length)return null;var n=cart.length,sb=0,sa=0,sp=0,sr=0,bk={};for(var i=0;i<n;i++){var ps=cart[i].psych;sb+=ps.b;sa+=ps.a;sp+=ps.p;sr+=ps.rit;var k=ps.bloom+'-'+ps.bloomLabel;bk[k]=(bk[k]||0)+1;}var mr=sr/n,al=n>1?r2(clamp(n*mr/(1+(n-1)*mr),0,0.99)):r2(mr);return{n:n,b:r2(sb/n),a:r2(sa/n),p:r2(sp/n),alpha:al,bk:bk};}
+function renderSummary(s){var el=document.getElementById('toverzicht');if(!s){el.style.display='none';return;}el.style.display='block';var b=s.b,dc,bp,dl;if(b<-0.5){dc='#2E7D32';bp=15;dl='Makkelijk';}else if(b<0){dc='#558B2F';bp=33;dl='Makkelijk-gemiddeld';}else if(b<0.5){dc='#F57F17';bp=56;dl='Gemiddeld';}else if(b<1){dc='#E65100';bp=76;dl='Gemiddeld-moeilijk';}else{dc='#B71C1C';bp=93;dl='Moeilijk';}var al=s.alpha,albl=al<0.50?'Onvoldoende':al<0.65?'Matig':al<0.75?'Redelijk':al<0.85?'Goed':'Uitstekend',alc=al<0.50?'#B71C1C':al<0.75?'#E65100':'#2E7D32';var bh='';for(var k in s.bk){var pts=k.split('-'),lvl=parseInt(pts[0]),lbl=pts.slice(1).join('-'),bc=BLC[lvl]||BLC[3];bh+='<span class="bpill" style="background:'+bc.bg+';color:'+bc.tc+';border:1px solid '+bc.bc+'">'+lvl+'\u2014'+lbl+': <b>'+s.bk[k]+'</b></span>';}el.innerHTML='<div class="tov-title">\uD83D\uDCCA Toetsoverzicht \u2014 '+s.n+' vragen</div><div class="tov-stats"><div class="tov-stat"><div class="tov-val" style="color:'+dc+'">'+(b>0?'+':'')+b+'</div><div class="tov-lbl">Gem. moeilijkheid (b\u0305)</div><div class="tov-sub" style="color:'+dc+'">'+dl+'</div></div><div class="tov-stat"><div class="tov-val">'+s.a+'</div><div class="tov-lbl">Gem. discriminatie (\u0101)</div></div><div class="tov-stat"><div class="tov-val">'+Math.round(s.p*100)+'%</div><div class="tov-lbl">Verwachte p-waarde</div></div><div class="tov-stat"><div class="tov-val" style="color:'+alc+'">'+al+'</div><div class="tov-lbl">Betrouwbaarheid (\u03b1)</div><div class="tov-sub" style="color:'+alc+'">'+albl+'</div></div></div><div class="vwrap"><span style="font-size:10px;color:var(--tx2);min-width:80px">Moeilijkheid:</span><div class="vtrack"><div class="vfill" style="width:'+bp+'%;background:'+dc+'"></div></div><span style="font-size:11px;font-weight:600;color:'+dc+'">'+dl+'</span></div><div class="bdlbl">Bloom:</div><div class="bdist">'+bh+'</div>';}
+
+/* MUTATORS */
+var M=[];
+M[0]=function(){var a=ri(2,8),x=ri(1,10),b=ri(1,15),c=a*x+b;var wr=[x-1,x+1,x+2].filter(function(v){return v!==x&&v>0;});var opts=shuffle([x].concat(wr.slice(0,3)).slice(0,4).map(function(v){return'x = '+v;}));var ans=opts.indexOf('x = '+x);return{q:'Los op: '+a+'x + '+b+' = '+c,opts:opts,ans:'ABCD'[ans]};};
+M[1]=function(){var x=ri(2,12),n=x*x;var opts=shuffle(['x = \xb1'+x,'x = '+x,'x = \xb1'+(x-1),'x = '+(x+1)]);var ans=opts.indexOf('x = \xb1'+x);return{q:'Welke waarde heeft x als 2x\xb2 = '+(2*n)+'?',opts:opts,ans:'ABCD'[ans]};};
+M[2]=function(){var x=ri(3,12),y=ri(1,x-1),s=x+y,d=x-y;var opts=shuffle(['x='+x,'x='+(x+1),'x='+(x-1),'x='+y]);var ans=opts.indexOf('x='+x);return{q:'Stelsel: x+y='+s+' en x\u2212y='+d+'. Wat is x?',opts:opts,ans:'ABCD'[ans]};};
+M[3]=function(){var r1=ri(1,7),r2v=ri(1,7),b=r1+r2v,c=r1*r2v;var opts=shuffle(['x='+r1+' en x='+r2v,'x=\u2212'+r1+' en x=\u2212'+r2v,'x='+r1+' en x=\u2212'+r2v,'x=\u2212'+r1+' en x='+r2v]);var ans=opts.indexOf('x=\u2212'+r1+' en x=\u2212'+r2v);return{q:'Oplossingen van x\xb2+'+b+'x+'+c+'=0?',opts:opts,ans:'ABCD'[ans]};};
+M[4]=function(){var bv=ri(2,8),c=ri(2,10),D=bv*bv-4*c;var opts=['D='+D,'D='+(bv*bv),'D='+(D+4),'D=0'].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);while(opts.length<4)opts.push('D='+(D-ri(1,5)));var ans=opts.indexOf('D='+D);if(ans<0){opts[0]='D='+D;ans=0;}return{q:'Discriminant van x\xb2+'+bv+'x+'+c+'=0?',opts:opts,ans:'ABCD'[ans]};};
+M[5]=function(){var m=ri(2,9),b=ri(1,12);var opts=shuffle([String(m),'\u2212'+b,'\u2212'+m,String(b)]);var ans=opts.indexOf(String(m));return{q:'Helling van y='+m+'x\u2212'+b+'?',opts:opts,ans:'ABCD'[ans]};};
+M[6]=function(){var a=2,b=1,c=-1,d=7,x=(d-b)/(a-c),y=a*x+b;var opts=shuffle(['('+x+','+y+')','('+(x+1)+','+y+')','('+x+','+(y+1)+')','('+(x-1)+','+(y-1)+')']);var ans=opts.indexOf('('+x+','+y+')');return{q:'Snijpunt van y='+a+'x+'+b+' en y='+c+'x+'+d+'?',opts:opts,ans:'ABCD'[ans]};};
+M[7]=function(){var xv=-ri(1,6),c=ri(1,10),bv=-2*xv,yv=xv*xv+bv*xv+c;var opts=shuffle(['('+xv+','+yv+')','('+(-xv)+','+yv+')','('+xv+','+(yv+1)+')','('+(xv+1)+','+(yv-1)+')']);var ans=opts.indexOf('('+xv+','+yv+')');return{q:'Top van y=x\xb2'+(bv>=0?'+'+bv:'\u2212'+Math.abs(bv))+'x+'+c+'?',opts:opts,ans:'ABCD'[ans]};};
+M[8]=function(){var a=ri(2,6),b=ri(2,6),s=a+b;var opts=shuffle(['2^'+s,'2^'+(a*b),'4^'+s,'2^'+(s+1)]);var ans=opts.indexOf('2^'+s);return{q:'Wat is 2^'+a+'\xb72^'+b+'?',opts:opts,ans:'ABCD'[ans]};};
+M[9]=function(){var e=ri(2,6),n=Math.pow(10,e);var opts=shuffle([String(e-1),String(e),String(e+1),String(e*2)]);var ans=opts.indexOf(String(e));return{q:'Wat is log\u2081\u2080('+n+')?',opts:opts,ans:'ABCD'[ans]};};
+M[10]=function(){var x=ri(3,8),n=Math.pow(2,x);var opts=shuffle(['x='+(x-1),'x='+x,'x='+(x+1),'x='+n]);var ans=opts.indexOf('x='+x);return{q:'Los op: 2^x='+n,opts:opts,ans:'ABCD'[ans]};};
+M[11]=function(){var n=ri(2,9);var opts=shuffle([n+'e','e^'+n,String(n),'1/'+n]);var ans=opts.indexOf(String(n));return{q:'Wat is ln(e^'+n+')?',opts:opts,ans:'ABCD'[ans]};};
+M[12]=function(){var b=ri(2,4),q=ri(2,4),a=b*Math.pow(2,q);var opts=shuffle(['log\u2082('+(a-b)+')',String(q),String(q+1),'log\u2082('+b+')']);var ans=opts.indexOf(String(q));return{q:'Vereenvoudig log\u2082('+a+')\u2212log\u2082('+b+')',opts:opts,ans:'ABCD'[ans]};};
+M[13]=function(){var a1=ri(2,10),d=ri(2,6),a3=a1+2*d;var opts=shuffle(['a\u2081='+a1,'a\u2081='+(a1+1),'a\u2081='+(a1+d),'a\u2081='+a3]);var ans=opts.indexOf('a\u2081='+a1);return{q:'Eerste term a\u2081 als a\u2083='+a3+' en d='+d+'?',opts:opts,ans:'ABCD'[ans]};};
+M[14]=function(){var a1=ri(1,5),d=ri(2,5),n=ri(5,12),an=a1+(n-1)*d,s=n*(a1+an)/2;var opts=shuffle([String(s-10),String(s),String(s+10),String(s+d*n)]);var ans=opts.indexOf(String(s));return{q:'Som eerste '+n+' termen van '+a1+','+(a1+d)+','+(a1+2*d)+',...?',opts:opts,ans:'ABCD'[ans]};};
+M[15]=function(){var a1=ri(1,5),r=ri(2,3),n=ri(4,6),an=a1*Math.pow(r,n-1);var opts=shuffle([String(an),String(an-a1),String(an*r),String(an+r)]);var ans=opts.indexOf(String(an));return{q:'Meetkundige rij a\u2081='+a1+', r='+r+'. '+n+'e term?',opts:opts,ans:'ABCD'[ans]};};
+M[16]=function(){var n=ri(4,7),f=[1,1,2,6,24,120,720,5040][n];var opts=[String(f-ri(1,5)),String(f),String(f+ri(1,10)),String(n*n)].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);while(opts.length<4)opts.push(String(f*2));var ans=opts.indexOf(String(f));if(ans<0){opts[0]=String(f);ans=0;}return{q:'Bereken: '+n+'!',opts:opts,ans:'ABCD'[ans]};};
+M[17]=function(){var a=ri(2,6),b=ri(2,6),c=ri(2,6),d=ri(2,6),fr=frac(a*d,b*c),rn=fr[0],rd=fr[1],as=rd===1?String(rn):rn+'/'+rd;var opts=[as,String(a*c)+'/'+String(b*d),String(a)+'/'+String(b*c),String(rn+1)+'/'+String(rd)].filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,4);while(opts.length<4)opts.push(String(rn)+'/'+String(rd+1));var ans=opts.indexOf(as);if(ans<0){opts[0]=as;ans=0;}return{q:'('+a+'/'+b+')\xf7('+c+'/'+d+')?',opts:opts,ans:'ABCD'[ans]};};
+M[18]=function(){var g=pick([6,7,8,9,10,12]),m1=ri(2,8),m2=ri(2,8);while(m1===m2)m2=ri(2,8);var a=g*m1,b=g*m2,ag=gcd(a,b);var opts=[String(ag),String(ag*2),String(Math.min(a,b)),String(ag+ri(1,4))].filter(function(v,i,rv){return rv.indexOf(v)===i;}).slice(0,4);while(opts.length<4)opts.push(String(ag-1));var ans=opts.indexOf(String(ag));if(ans<0){opts[0]=String(ag);ans=0;}return{q:'Ggd van '+a+' en '+b+'?',opts:opts,ans:'ABCD'[ans]};};
+M[19]=function(){var n=ri(2,8);var opts=shuffle(['x\u2212'+n,'x+'+n,'x\xb2\u2212'+n,'(x\u2212'+n+')(x+'+n+')']);var ans=opts.indexOf('x\u2212'+n);return{q:'Vereenvoudig (x\xb2\u2212'+(n*n)+')/(x+'+n+'), x\u2260\u2212'+n,opts:opts,ans:'ABCD'[ans]};};
+
+var BQ=[
+  {cat:'Vergelijkingen',diff:'makkelijk',mi:0},{cat:'Vergelijkingen',diff:'makkelijk',mi:1},
+  {cat:'Vergelijkingen',diff:'gemiddeld',mi:2},{cat:'Vergelijkingen',diff:'gemiddeld',mi:3},
+  {cat:'Vergelijkingen',diff:'gemiddeld',mi:4},{cat:'Vergelijkingen',diff:'gemiddeld',mi:4},
+  {cat:'Vergelijkingen',diff:'moeilijk',mi:3},{cat:'Vergelijkingen',diff:'moeilijk',mi:1},
+  {cat:'Functies',diff:'makkelijk',mi:5},{cat:'Functies',diff:'gemiddeld',mi:6},
+  {cat:'Functies',diff:'gemiddeld',mi:7},{cat:'Functies',diff:'gemiddeld',mi:5},
+  {cat:'Functies',diff:'gemiddeld',mi:7},{cat:'Functies',diff:'gemiddeld',mi:6},{cat:'Functies',diff:'moeilijk',mi:7},
+  {cat:'Exponenten & logaritmen',diff:'makkelijk',mi:8},{cat:'Exponenten & logaritmen',diff:'makkelijk',mi:9},
+  {cat:'Exponenten & logaritmen',diff:'gemiddeld',mi:10},{cat:'Exponenten & logaritmen',diff:'gemiddeld',mi:11},
+  {cat:'Exponenten & logaritmen',diff:'gemiddeld',mi:12},{cat:'Exponenten & logaritmen',diff:'gemiddeld',mi:12},
+  {cat:'Exponenten & logaritmen',diff:'moeilijk',mi:10},
+  {cat:'Rijen & reeksen',diff:'gemiddeld',mi:13},{cat:'Rijen & reeksen',diff:'gemiddeld',mi:14},
+  {cat:'Rijen & reeksen',diff:'gemiddeld',mi:15},{cat:'Rijen & reeksen',diff:'moeilijk',mi:14},
+  {cat:'Rekenen & getallen',diff:'makkelijk',mi:16},{cat:'Rekenen & getallen',diff:'gemiddeld',mi:17},
+  {cat:'Rekenen & getallen',diff:'gemiddeld',mi:18},{cat:'Rekenen & getallen',diff:'moeilijk',mi:19}
+];
+var state=BQ.map(function(v){var g=M[v.mi]();return{cat:v.cat,diff:v.diff,mi:v.mi,q:g.q,opts:g.opts,ans:g.ans,history:[],isCustom:false,notes:'',mutating:false};});
+var openCards=[],cart=[],cartId=1,dragSrc=null,pendingDel=-1,openNotes=[],editIdx=-1;
+
+function switchTab(t){document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');});document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});document.querySelector('.tab[data-tab="'+t+'"]').classList.add('active');document.getElementById('panel-'+t).classList.add('active');}
+function showCMode(m){document.getElementById('cmode-manual').style.display=m==='manual'?'block':'none';document.getElementById('cmode-qti').style.display=m==='qti'?'block':'none';document.getElementById('ctab-m').classList.toggle('active',m==='manual');document.getElementById('ctab-q').classList.toggle('active',m==='qti');}
+
+function render(){
+  var srch=document.getElementById('search').value.toLowerCase();
+  var fcat=document.getElementById('fcat').value,fdiff=document.getElementById('fdiff').value;
+  var filtered=[];
+  for(var i=0;i<state.length;i++){var v=state[i];if(fcat&&v.cat!==fcat)continue;if(fdiff&&v.diff!==fdiff)continue;if(srch){var f=v.q.toLowerCase().indexOf(srch)>=0;if(!f)for(var j=0;j<v.opts.length;j++)if(v.opts[j].toLowerCase().indexOf(srch)>=0){f=true;break;}if(!f)continue;}filtered.push(i);}
+  var cust=state.filter(function(v){return v.isCustom;}).length;
+  document.getElementById('counter').textContent=filtered.length+' van '+state.length+' vragen'+(cust?' ('+cust+' eigen)':'');
+  var list=document.getElementById('list');
+  if(!filtered.length){list.innerHTML='<div class="nores">Geen vragen gevonden.</div>';return;}
+  var h='',L=['A','B','C','D'];
+  for(var fi=0;fi<filtered.length;fi++){
+    var idx=filtered[fi],v=state[idx],isOpen=openCards.indexOf(idx)>=0;
+    var cc=0;for(var ci=0;ci<cart.length;ci++)if(cart[ci].si===idx)cc++;
+    var dc=diffCls(v.diff),dl=v.diff.charAt(0).toUpperCase()+v.diff.slice(1),ai='ABCD'.indexOf(v.ans);
+    h+='<div class="card'+(isOpen?' open':'')+'" id="card-'+idx+'"><div class="ch" onclick="toggle('+idx+')">';
+    h+='<div class="qn '+(v.isCustom?'cust':'std')+'">'+(idx+1)+'</div>';
+    h+='<div class="qt">'+v.q+'<div class="tags"><span class="tag">'+v.cat+'</span><span class="tag '+dc+'">'+dl+'</span>';
+    if(v.isCustom)h+='<span class="tag cu">\u270f\ufe0f Eigen</span>';
+    if(v.notes&&v.notes.trim())h+='<span class="tag">\uD83D\uDCAC</span>';
+    if(cc>0)h+='<span class="tag ct">\uD83D\uDED2 '+cc+'\xd7</span>';
+    h+='</div></div><div class="chev">&#9658;</div></div>';
+    h+='<div class="cb">';
+    if(editIdx===idx){h+=renderEditForm(idx,v);}
+    else{
+      h+='<div class="vbox"><div class="vlbl">Vraag</div><div class="vq">'+v.q+'</div></div>';
+      h+='<ul class="opts">';for(var oi=0;oi<v.opts.length&&oi<4;oi++)h+='<li><span class="lt">'+L[oi]+'.</span> '+v.opts[oi]+'</li>';h+='</ul>';
+      h+='<div class="ar"><span class="al">Juist antwoord:</span><span class="av">'+v.ans+' \u2014 '+v.opts[ai]+'</span></div>';
+      h+='<div class="brow">';
+      if(v.isCustom){if(v.mutating){h+='<span class="mutload">\u23f3 AI denkt...</span>';}else{h+='<button class="btn btn-acc" onclick="mutateCustomAI('+idx+')">\uD83E\uDD16 Muteer (AI)</button>';}}
+      else{h+='<button class="btn btn-acc" onclick="mutate('+idx+')">&#8635; Muteer</button>';}
+      h+='<button class="btn" id="cpb-'+idx+'" onclick="copyQ('+idx+')">Kopieer</button>';
+      h+='<button class="btn btn-grn" onclick="addToCart('+idx+')">+ Winkelmand</button>';
+      if(v.isCustom){
+        h+='<button class="btn'+(openNotes.indexOf(idx)>=0?' btn-acc':'')+'" onclick="toggleNotes('+idx+')">\uD83D\uDCAC '+(openNotes.indexOf(idx)>=0?'Sluiten':'Notities')+'</button>';
+        h+='<button class="btn btn-ora" onclick="startEdit('+idx+')">\u270f\ufe0f Bewerken</button>';
+        if(pendingDel===idx){h+='<span class="del-row"><span>Verwijderen?</span><button class="bdy" onclick="confirmDel('+idx+')">&#10003; Ja</button><button class="bdn" onclick="cancelDel()">Nee</button></span>';}
+        else{h+='<button class="btn btn-red" onclick="startDel('+idx+')">\uD83D\uDDD1 Verwijder</button>';}
+      }
+      h+='</div>';
+      if(v.isCustom&&openNotes.indexOf(idx)>=0){h+='<div class="np"><div class="np-lbl">Opmerkingen</div><textarea class="np-ta" oninput="updateNotes('+idx+',this.value)" placeholder="Notities, didactische tips, herkomst...">'+esc(v.notes||'')+'</textarea></div>';}
+      if(v.history&&v.history.length){h+='<div style="margin-top:8px"><div class="vlbl">Vorige varianten:</div>';for(var hi=0;hi<v.history.length;hi++)h+='<div style="font-size:11px;color:var(--tx2);padding:2px 0;border-bottom:1px solid var(--bd3)">'+v.history[hi]+'</div>';h+='</div>';}
+    }
+    h+='</div></div>';
+  }
+  list.innerHTML=h;
+}
+
+function renderEditForm(idx,v){
+  var ps=v.customPsych||{};
+  var h='<div class="ep"><div class="ep-title">\u270f\ufe0f Vraag bewerken</div>';
+  h+='<div class="fg"><label>Vraagtekst</label><input type="text" id="ep-q" value="'+esc(v.q)+'"></div>';
+  h+='<div class="fgrow">';
+  var L=['A','B','C','D'];for(var oi=0;oi<4;oi++)h+='<div class="fg"><label>Optie '+L[oi]+'</label><input type="text" id="ep-o'+L[oi]+'" value="'+esc(v.opts[oi]||'')+'"></div>';
+  h+='</div><div class="fgrow">';
+  h+='<div class="fg"><label>Juist antwoord</label><select id="ep-ans">';
+  L.forEach(function(l){h+='<option'+(v.ans===l?' selected':'')+'>'+l+'</option>';});
+  h+='</select></div><div class="fg"><label>Categorie</label><select id="ep-cat">';
+  ['Vergelijkingen','Functies','Exponenten & logaritmen','Rijen & reeksen','Rekenen & getallen','Ge\xefmporteerd','Anders'].forEach(function(c){h+='<option'+(v.cat===c?' selected':'')+'>'+c+'</option>';});
+  h+='</select></div><div class="fg"><label>Moeilijkheid</label><select id="ep-diff">';
+  ['makkelijk','gemiddeld','moeilijk'].forEach(function(d){h+='<option value="'+d+'"'+(v.diff===d?' selected':'')+'>'+d.charAt(0).toUpperCase()+d.slice(1)+'</option>';});
+  h+='</select></div></div>';
+  h+='<div class="psect"><div class="psect-t">Psychometrische data</div><div class="fgrow">';
+  h+='<div class="fg"><label>b</label><input type="number" id="ep-ib" step="0.01" value="'+(ps.b!==undefined?ps.b:'')+'" placeholder="-0.82"></div>';
+  h+='<div class="fg"><label>a</label><input type="number" id="ep-ia" step="0.01" value="'+(ps.a!==undefined?ps.a:'')+'" placeholder="1.14"></div>';
+  h+='<div class="fg"><label>p</label><input type="number" id="ep-ip" step="0.01" value="'+(ps.p!==undefined?ps.p:'')+'" placeholder="0.78"></div>';
+  h+='<div class="fg"><label>rit</label><input type="number" id="ep-ir" step="0.01" value="'+(ps.rit!==undefined?ps.rit:'')+'" placeholder="0.42"></div>';
+  h+='</div><div class="fg" style="max-width:220px"><label>Bloom</label><select id="ep-bl">';
+  for(var li=1;li<=6;li++)h+='<option value="'+li+'"'+(ps.bloom===li?' selected':'')+'>'+li+' \u2014 '+BLLBL[li]+'</option>';
+  h+='</select></div></div>';
+  h+='<div class="ep-btns"><button class="btn btn-acc" style="font-weight:600" onclick="saveEdit('+idx+')">\u2713 Opslaan</button><button class="btn" onclick="cancelEdit()">Annuleren</button></div></div>';
+  return h;
+}
+
+function mutate(idx){var v=state[idx];v.history.unshift(v.q);if(v.history.length>3)v.history.pop();var g=M[v.mi]();v.q=g.q;v.opts=g.opts;v.ans=g.ans;render();}
+function copyQ(idx){var v=state[idx],t=v.q+'\n'+['A','B','C','D'].map(function(l,i){return l+'. '+v.opts[i];}).join('\n')+'\nAntwoord: '+v.ans+'. '+v.opts['ABCD'.indexOf(v.ans)];navigator.clipboard.writeText(t).catch(function(){});var b=document.getElementById('cpb-'+idx);if(b){b.textContent='Gekopieerd!';b.classList.add('btn-copied');setTimeout(function(){b.textContent='Kopieer';b.classList.remove('btn-copied');},1800);}}
+function toggle(idx){if(editIdx===idx)return;var p=openCards.indexOf(idx);if(p>=0)openCards.splice(p,1);else openCards.push(idx);render();}
+function toggleAll(open){openCards=open?state.map(function(_,i){return i;}):[]; editIdx=-1;render();}
+function startDel(idx){pendingDel=idx;if(openCards.indexOf(idx)<0)openCards.push(idx);render();}
+function cancelDel(){pendingDel=-1;render();}
+function confirmDel(idx){state.splice(idx,1);openCards=openCards.filter(function(i){return i!==idx;}).map(function(i){return i>idx?i-1:i;});openNotes=openNotes.filter(function(i){return i!==idx;}).map(function(i){return i>idx?i-1:i;});cart=cart.filter(function(c){return c.si!==idx;}).map(function(c){return c.si>idx?Object.assign({},c,{si:c.si-1}):c;});if(editIdx===idx)editIdx=-1;else if(editIdx>idx)editIdx--;pendingDel=-1;render();renderCart();}
+function toggleNotes(idx){var p=openNotes.indexOf(idx);if(p>=0)openNotes.splice(p,1);else openNotes.push(idx);if(openCards.indexOf(idx)<0)openCards.push(idx);render();}
+function updateNotes(idx,val){if(state[idx])state[idx].notes=val;}
+function startEdit(idx){editIdx=idx;if(openCards.indexOf(idx)<0)openCards.push(idx);pendingDel=-1;render();}
+function cancelEdit(){editIdx=-1;render();}
+function saveEdit(idx){var newQ=document.getElementById('ep-q').value.trim();if(!newQ)return;var v=state[idx];v.history=v.history||[];v.history.unshift(v.q);if(v.history.length>3)v.history.pop();v.q=newQ;v.opts=[document.getElementById('ep-oA').value.trim()||'\u2014',document.getElementById('ep-oB').value.trim()||'\u2014',document.getElementById('ep-oC').value.trim()||'\u2014',document.getElementById('ep-oD').value.trim()||'\u2014'];v.ans=document.getElementById('ep-ans').value;v.cat=document.getElementById('ep-cat').value;v.diff=document.getElementById('ep-diff').value;var bv=parseFloat(document.getElementById('ep-ib').value),av=parseFloat(document.getElementById('ep-ia').value),pv=parseFloat(document.getElementById('ep-ip').value),rv=parseFloat(document.getElementById('ep-ir').value),bl=parseInt(document.getElementById('ep-bl').value)||3;var auto=genPsych(v.q,v.diff,v.cat);v.customPsych={b:!isNaN(bv)?r2(clamp(bv,-3,3)):auto.b,a:!isNaN(av)?r2(clamp(av,0.1,3)):auto.a,p:!isNaN(pv)?r2(clamp(pv,0,1)):auto.p,rit:!isNaN(rv)?r2(clamp(rv,0,1)):auto.rit,bloom:bl,bloomLabel:BLLBL[bl]||'Toepassen'};editIdx=-1;render();}
+
+async function mutateCustomAI(idx){
+  var apiKey=getApiKey();
+  if(!apiKey){openSettings('Voer je Anthropic API-sleutel in om AI-mutatie te gebruiken.');return;}
+  var v=state[idx];v.mutating=true;if(openCards.indexOf(idx)<0)openCards.push(idx);render();
+  try{
+    var resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:600,messages:[{role:'user',content:'Genereer een nieuwe variant van deze multiple choice wiskundevraag met ANDERE getallen maar DEZELFDE oplossingsstrategie. Geef ALLEEN geldige JSON terug:\n{"q":"<vraagtekst>","opts":["<A>","<B>","<C>","<D>"],"ans":"<A|B|C|D>"}\n\nOriginele vraag: '+v.q+'\nOpties: '+['A','B','C','D'].map(function(l,i){return l+'='+v.opts[i];}).join(', ')+'\nJuist antwoord: '+v.ans+' ('+v.opts['ABCD'.indexOf(v.ans)]+')'}]})
+    });
+    if(!resp.ok){var ed=await resp.json();throw new Error('API '+resp.status+': '+(ed.error&&ed.error.message||'onbekende fout'));}
+    var data=await resp.json();
+    var txt=data.content[0].text.replace(/```[a-z]*/g,'').replace(/```/g,'').trim();
+    var parsed=JSON.parse(txt);
+    if(parsed.q&&parsed.opts&&parsed.ans){v.history=v.history||[];v.history.unshift(v.q);if(v.history.length>3)v.history.pop();v.q=parsed.q;v.opts=parsed.opts;v.ans=parsed.ans;v.customPsych=genPsych(v.q,v.diff,v.cat);}
+  }catch(err){alert('AI-mutatie mislukt: '+err.message+'\n\nControleer je API-sleutel via het \u2699\ufe0f-icoon.');}
+  finally{v.mutating=false;render();}
+}
+
+function addToCart(idx){var v=state[idx];var psych=v.isCustom&&v.customPsych?v.customPsych:genPsych(v.q,v.diff,v.cat);cart.push({id:cartId++,si:idx,q:v.q,opts:v.opts.slice(),ans:v.ans,cat:v.cat,diff:v.diff,psych:psych});render();renderCart();}
+function removeFromCart(id){for(var i=0;i<cart.length;i++)if(cart[i].id===id){cart.splice(i,1);break;}render();renderCart();}
+function clearCart(){cart=[];render();renderCart();}
+function randomizeCart(){for(var i=cart.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=cart[i];cart[i]=cart[j];cart[j]=t;}renderCart();}
+
+function renderCart(){
+  document.getElementById('cbadge').textContent=cart.length;
+  var wrap=document.getElementById('clist'),foot=document.getElementById('cfooter'),hint=document.getElementById('dhint'),fmtw=document.getElementById('fmtwrap');
+  if(!cart.length){wrap.innerHTML='<div class="cempty">Winkelmand is leeg.<br>Ga naar <strong>Itembank</strong> en klik op <strong>"+ Winkelmand"</strong>.</div>';foot.style.display='none';hint.style.display='none';fmtw.style.display='none';renderSummary(null);return;}
+  foot.style.display='flex';hint.style.display='block';fmtw.style.display='block';
+  var n=cart.length,h='',L=['A','B','C','D'];
+  for(var i=0;i<n;i++){
+    var c=cart[i],ps=c.psych,ai='ABCD'.indexOf(c.ans),dc=diffCls(c.diff),dl=c.diff.charAt(0).toUpperCase()+c.diff.slice(1),bc=BLC[ps.bloom]||BLC[3];
+    var oph='';for(var oi=0;oi<4;oi++)oph+='<li><span class="lt">'+L[oi]+'.</span> '+c.opts[oi]+'</li>';
+    h+='<div class="ccard" id="ci-'+c.id+'" draggable="true" ondragstart="ds(event,'+c.id+')" ondragover="dov(event,'+c.id+')" ondrop="drp(event,'+c.id+')" ondragend="den()">';
+    h+='<div class="chead"><div class="dhandle">\u2b1e</div><div class="cnum">'+(i+1)+'</div>';
+    h+='<div class="cq">'+c.q+'<div class="tags" style="margin-top:3px"><span class="tag">'+c.cat+'</span><span class="tag '+dc+'">'+dl+'</span></div></div>';
+    h+='<div class="obts"><button class="obt" onclick="mvUp('+i+')" '+(i===0?'disabled':'')+'>\u25b2</button><button class="obt" onclick="mvDn('+i+')" '+(i===n-1?'disabled':'')+'>\u25bc</button></div>';
+    h+='<button class="crem" onclick="removeFromCart('+c.id+')">\u2715</button></div>';
+    h+='<div class="prow"><span class="ppill">b=<b>'+(ps.b>0?'+':'')+ps.b+'</b></span><span class="ppill">a=<b>'+ps.a+'</b></span><span class="ppill">p=<b>'+ps.p+'</b></span><span class="ppill">rit=<b>'+ps.rit+'</b></span>';
+    h+='<span class="ppill" style="background:'+bc.bg+';color:'+bc.tc+';border-color:'+bc.bc+'">Bloom '+ps.bloom+'\u2014'+ps.bloomLabel+'</span></div>';
+    h+='<ul class="opts">'+oph+'</ul><div class="ar"><span class="al">Antwoord:</span><span class="av">'+c.ans+'\u2014'+c.opts[ai]+'</span></div></div>';
+  }
+  wrap.innerHTML=h;renderSummary(calcSummary(cart));
+}
+function ds(e,id){dragSrc=id;e.dataTransfer.effectAllowed='move';setTimeout(function(){var el=document.getElementById('ci-'+id);if(el)el.classList.add('dragging');},0);}
+function dov(e,id){e.preventDefault();if(dragSrc!==null&&dragSrc!==id){document.querySelectorAll('.ccard').forEach(function(el){el.classList.remove('dragover');});var el=document.getElementById('ci-'+id);if(el)el.classList.add('dragover');}}
+function den(){document.querySelectorAll('.ccard').forEach(function(el){el.classList.remove('dragging','dragover');});dragSrc=null;}
+function drp(e,tid){e.preventDefault();if(dragSrc===null||dragSrc===tid){dragSrc=null;return;}var si=-1,ti=-1;for(var i=0;i<cart.length;i++){if(cart[i].id===dragSrc)si=i;if(cart[i].id===tid)ti=i;}if(si>=0&&ti>=0){var item=cart.splice(si,1)[0];cart.splice(ti,0,item);}dragSrc=null;renderCart();}
+function mvUp(i){if(i<=0)return;var t=cart[i-1];cart[i-1]=cart[i];cart[i]=t;renderCart();}
+function mvDn(i){if(i>=cart.length-1)return;var t=cart[i+1];cart[i+1]=cart[i];cart[i]=t;renderCart();}
+function setFmt(btn){document.querySelectorAll('.fmtbtn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');}
+
+function showFb(id,type,msg){var el=document.getElementById(id);if(!el)return;el.className='fb '+(type==='ok'?'ok':'err');el.textContent=msg;if(type==='ok')setTimeout(function(){el.className='fb';el.textContent='';},4000);}
+function addCustomQ(){
+  var q=document.getElementById('f-q').value.trim(),oA=document.getElementById('f-a').value.trim(),oB=document.getElementById('f-b').value.trim(),oC=document.getElementById('f-c').value.trim(),oD=document.getElementById('f-d').value.trim();
+  var ans=document.getElementById('f-ans').value,cat=document.getElementById('f-cat').value,diff=document.getElementById('f-diff').value;
+  if(!q){showFb('create-fb','err','Vul de vraagtekst in.');return;}
+  if(!oA||!oB){showFb('create-fb','err','Vul minimaal optie A en B in.');return;}
+  var opts=[oA,oB,oC||'\u2014',oD||'\u2014'];
+  if(!opts['ABCD'.indexOf(ans)]||opts['ABCD'.indexOf(ans)]==='\u2014'){showFb('create-fb','err','Optie '+ans+' is leeg.');return;}
+  var bv=parseFloat(document.getElementById('p-b').value),av=parseFloat(document.getElementById('p-a').value),pv=parseFloat(document.getElementById('p-pv').value),rv=parseFloat(document.getElementById('p-rit').value),bl=parseInt(document.getElementById('p-bloom').value)||3;
+  var auto=genPsych(q,diff,cat);
+  var psych={b:!isNaN(bv)?r2(clamp(bv,-3,3)):auto.b,a:!isNaN(av)?r2(clamp(av,0.1,3)):auto.a,p:!isNaN(pv)?r2(clamp(pv,0,1)):auto.p,rit:!isNaN(rv)?r2(clamp(rv,0,1)):auto.rit,bloom:bl,bloomLabel:BLLBL[bl]||'Toepassen'};
+  state.push({cat:cat,diff:diff,mi:-1,q:q,opts:opts,ans:ans,history:[],isCustom:true,notes:'',mutating:false,customPsych:psych});
+  ['f-q','f-a','f-b','f-c','f-d','p-b','p-a','p-pv','p-rit'].forEach(function(id){document.getElementById(id).value='';});
+  showFb('create-fb','ok','\u2713 Vraag toegevoegd!');render();
+}
+function handleQTIFile(e){var file=e.target.files[0];if(!file)return;document.getElementById('qti-fnm').textContent=file.name;var reader=new FileReader();reader.onload=function(ev){document.getElementById('qti-paste').value=ev.target.result;previewQTI();};reader.readAsText(file,'UTF-8');}
+function parseQTIXML(xmlText){
+  try{
+    var dp=new DOMParser(),doc=dp.parseFromString(xmlText,'application/xml');
+    var perr=doc.querySelector('parsererror');if(perr)return{error:'Ongeldige XML.'};
+    var isQ3=!!doc.querySelector('qti-assessment-item'),isQ2=!!doc.querySelector('assessmentItem');
+    if(!isQ3&&!isQ2)return{error:'Geen geldig QTI-item gevonden.'};
+    var pf=isQ3?'qti-':'';var rootEl=doc.querySelector(isQ3?'qti-assessment-item':'assessmentItem');
+    var body=doc.querySelector(pf+'item-body');var q='';
+    if(body){var p=body.querySelector('p');q=p?p.textContent.trim():body.textContent.replace(/\s+/g,' ').trim();}
+    if(!q)q=rootEl?rootEl.getAttribute('title')||rootEl.getAttribute('identifier')||'Vraag':'Vraag';
+    var cels=doc.querySelectorAll(pf+'simple-choice'),opts=[],cids=[];
+    cels.forEach(function(el){opts.push(el.textContent.trim());cids.push(el.getAttribute('identifier'));});
+    if(opts.length<2)return{error:'Minstens 2 opties nodig.'};
+    var corrEl=doc.querySelector(isQ3?'qti-correct-response qti-value':'correctResponse value');
+    var corrId=corrEl?corrEl.textContent.trim():'';var corrIdx=cids.indexOf(corrId);var ans=corrIdx>=0?'ABCD'[corrIdx]:'A';
+    var cat='Ge\xefmporteerd',diff='gemiddeld',psych=null;
+    var walker=doc.createTreeWalker(doc.documentElement,128);var node;
+    while((node=walker.nextNode())){var txt=node.nodeValue||'';var cm=txt.match(/onderwerp:\s*([^|\n\r]+)/i),dm=txt.match(/niveau:\s*([^|\n\r]+)/i),bm=txt.match(/\bb[_\-=:]\s*([-+]?\d+\.?\d*)/i),am=txt.match(/\ba[_\-=:]\s*(\d+\.?\d*)/i),blm=txt.match(/bloom[_\-=:\s]+(\d)/i);
+    if(cm)cat=cm[1].trim();if(dm)diff=dm[1].trim();if(bm||am){psych=psych||{};if(bm)psych.b=parseFloat(bm[1]);if(am)psych.a=parseFloat(am[1]);}if(blm){psych=psych||{};psych.bloom=parseInt(blm[1]);}}
+    while(opts.length<4)opts.push('\u2014');
+    return{q:q,opts:opts.slice(0,4),ans:ans,cat:cat,diff:diff,psych:psych,ver:isQ3?'3.0':'2.1'};
+  }catch(e){return{error:'Fout: '+e.message};}
+}
+var _qtiParsed=null;
+function previewQTI(){var xml=document.getElementById('qti-paste').value.trim();if(!xml){showFb('qti-fb','err','Geen XML.');return;}var res=parseQTIXML(xml);if(res.error){showFb('qti-fb','err',res.error);document.getElementById('qti-preview').style.display='none';_qtiParsed=null;return;}_qtiParsed=res;var L=['A','B','C','D'];var oh=res.opts.map(function(o,i){var ok=L[i]===res.ans;return'<div style="padding:3px 0;font-size:12px;'+(ok?'color:#3B6D11;font-weight:600':'color:var(--tx2)')+'"><b>'+L[i]+'.</b> '+o+(ok?' \u2713':'')+'</div>';}).join('');var prev=document.getElementById('qti-preview');prev.style.display='block';prev.innerHTML='<div style="font-size:10px;color:var(--tx2);margin-bottom:6px">PREVIEW \u2014 QTI '+res.ver+'</div><div style="font-size:13px;font-weight:600;margin-bottom:8px">'+res.q+'</div>'+oh+'<div style="font-size:10px;color:var(--tx2);margin-top:5px">Categorie: <b>'+res.cat+'</b> \xb7 Niveau: <b>'+res.diff+'</b>'+(res.psych?'<br>IRT gevonden in XML: b='+(res.psych.b||'?')+', a='+(res.psych.a||'?'):'')+'</div>';showFb('qti-fb','ok','\u2713 XML herkend (QTI '+res.ver+'). Klik Importeer.');}
+function importQTI(){if(!_qtiParsed){previewQTI();if(!_qtiParsed)return;}var res=_qtiParsed,auto=genPsych(res.q,res.diff,res.cat),psych=Object.assign({},auto);if(res.psych){if(res.psych.b!==undefined)psych.b=r2(res.psych.b);if(res.psych.a!==undefined)psych.a=r2(res.psych.a);if(res.psych.bloom){psych.bloom=res.psych.bloom;psych.bloomLabel=BLLBL[res.psych.bloom]||auto.bloomLabel;}}state.push({cat:res.cat,diff:res.diff,mi:-1,q:res.q,opts:res.opts,ans:res.ans,history:[],isCustom:true,notes:'',mutating:false,customPsych:psych});document.getElementById('qti-paste').value='';document.getElementById('qti-preview').style.display='none';document.getElementById('qti-fnm').textContent='Geen bestand';_qtiParsed=null;showFb('qti-fb','ok','\u2713 Ge\xefmporteerd!');render();}
+
+// INIT
+render();renderCart();updateKeyBanner();
+</script>
+</body>
+</html>
